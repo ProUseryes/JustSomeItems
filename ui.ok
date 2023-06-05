@@ -298,7 +298,7 @@ children.Added = function (name)
 end
 children.SaveData = function()
 	writefile("DNut Private/"..game.."/data.lua",game.HttpService:JSONEncode(children.Enabled))
-	writefile("DNut Private/"..game."/data2.lua",game.HttpService:JSONEncode(children.Opened))
+	writefile("DNut Private/"..game.."/data2.lua",game.HttpService:JSONEncode(children.Opened))
 	writefile("DNut Private/"..game.."/data3.lua",game.HttpService:JSONEncode(children.IsOpened))
 	local data4 = {}
 	for a,keybind in pairs(children.KeyBinds) do
