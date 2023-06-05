@@ -339,4 +339,71 @@ children.Notification = function (notification,time)
 		alreadymade -= 1
 	end)
 end
+children.RealLoadData = function ()
+	local data
+	local data2
+	pcall(function()
+		data = readfile("DNut Private/"..game.."/data.lua")
+	end)
+	pcall(function()
+		data2 = readfile("DNut Private/"..game.."/data2.lua")
+	end)
+	local data3;
+	pcall(function()
+		data3 = readfile("DNut Private/"..game.."/data3.lua")
+	end)
+	local data4;
+	pcall(function()
+		data4 = readfile("DNut Private/"..game.."/data4.lua")
+	end)
+	local function a_(data)
+		return game.HttpService:JSONDecode(data)
+	end
+	if data then
+		a,data = pcall(function()
+			return a_(data)
+		end)
+		if a then children.LoadData(data) end
+	end
+	if data2 then
+		a,data2 = pcall(function()
+			return a_(data2)
+		end)
+		a2,data3 = pcall(function() return a_(data3) end)
+		if a2 then
+			for i,v in pairs(data3) do
+				local aaa = {}
+				for i,v in pairs(data2[i]) do
+					table.insert(aaa,v)
+				end
+				table.insert(aaa,true)
+				data2[i] = aaa
+			end
+		end
+		if a then
+			children.LoadData(data2,"Positions")
+		end
+	end
+	if data4 then
+		a,data4 = pcall(function()
+			return a_(data4)
+		end)
+		if a then
+			children.LoadData(data4,"KeyBinds")
+		end
+	end
+end
+uis.InputBegan:Connect(function(input,gameprocess)
+	if gameprocess then return end
+	if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+		if input.KeyCode == Enum.KeyCode.P then
+			gui.Enabled = not gui.Enabled
+		end
+		if children.KeyBinds[input.KeyCode] then
+			for i,v in pairs(children.KeyBinds[input.KeyCode]) do
+				v()
+			end
+		end
+	end
+end)
 return children
