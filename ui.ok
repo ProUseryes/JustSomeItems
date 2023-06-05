@@ -1,0 +1,342 @@
+print("Press P to Open GUI!")
+
+local game = (shared.game or "unknown")
+
+local function randomString()
+	local randomlength = math.random(10,100)
+	local array = {}
+
+	for i = 1, randomlength do
+		array[i] = string.char(math.random(32, 126))
+	end
+
+	return table.concat(array)
+end
+if shared.__gui__ then
+	shared.__gui__:Destroy()
+end
+if not isfolder("DNut Private") then
+	makefolder("DNut Private")
+end
+if not isfolder("DNut Private/"..game) then
+	makefolder("DNut Private/"..game)
+end
+local gui = Instance.new("ScreenGui")
+gui.Name = randomString()
+gui.DisplayOrder = 999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+gui.OnTopOfCoreBlur = true
+if gethui and (not KRNL_LOADED) then
+	gui.Parent = gethui()
+elseif not is_sirhurt_closure and syn and syn.protect_gui then
+	syn.protect_gui(gui)
+	gui.Parent = game:GetService("CoreGui")
+else
+	gui.Parent = game:GetService("CoreGui")
+end
+gui.Enabled = false;
+local scaledgui = Instance.new("Frame")
+scaledgui.Name = "ScaledGui"
+scaledgui.Size = UDim2.new(1, 0, 1, 0)
+scaledgui.BackgroundTransparency = 1
+scaledgui.Parent = gui
+shared.__gui__ = gui;
+local uis = game.UserInputService
+--scaledgui.Visible = true;
+local children = {
+	All = {},
+	Opened = {},
+}
+local function ui(gui)
+	Instance.new("UICorner",gui)
+end
+local function dragGUI(gui,a)
+	task.spawn(function()
+		local dragging
+		local dragInput
+		local dragStart = Vector3.new(0,0,0)
+		local startPos
+		ui(gui)
+		local function update(input)
+			local delta = input.Position - dragStart
+			local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (delta.X * (1 / Instance.new("UIScale").Scale)), startPos.Y.Scale, startPos.Y.Offset + (delta.Y * (1 / Instance.new("UIScale").Scale)))
+			game:GetService("TweenService"):Create(gui, TweenInfo.new(.20), {Position = Position}):Play()
+			if a then
+				task.wait(.20)
+				local tble = {}
+				for i,v in pairs(string.split(tostring(gui.Position["X"]),",")) do table.insert(tble,tonumber(v)) end
+				for i,v in pairs(string.split(tostring(gui.Position["Y"]),",")) do table.insert(tble,tonumber(v)) end
+				children.Opened[gui.Name] = tble;
+			end
+		end
+		gui.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and dragging == false then
+				dragStart = input.Position
+				local delta = (dragStart - Vector3.new(gui.AbsolutePosition.X, gui.AbsolutePosition.Y, 0)) * (1 / Instance.new("UIScale").Scale)
+				if delta.Y <= 40 then
+					dragging = gui.Visible
+					startPos = gui.Position
+
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragging = false
+						end
+					end)
+				end
+			end
+		end)
+		gui.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+		game:GetService("UserInputService").InputChanged:Connect(function(input)
+			if input == dragInput and dragging then
+				update(input)
+			end
+		end)
+	end)
+end
+children.KeyBinds = {}
+children.Enabled = {}
+children.OpenFuncs = {}
+children.IsOpened = {}
+children.Buttons = {}
+children.LoadFuncs = {}
+children.LoadData = function (data,name)
+	if name == "Positions" then
+		for i,v in pairs(data) do
+			pcall(function()
+				children.OpenFuncs[i](v[5] and true or false,UDim2.new(v[1],v[2],v[3],v[4]))
+			end)
+		end
+		return
+	elseif name == "KeyBinds" then
+		for i,v in pairs(data) do
+			pcall(function ()
+				children.Buttons[i].Text = v;
+			end)
+		end
+		return
+	end
+	for i,v in pairs(data) do
+		for i,v in pairs(v) do
+			pcall(function()
+				task.spawn(function()
+					children.LoadFuncs[i](true)
+				end)
+			end)
+		end
+	end
+end
+children.RemoveKeyBind = function (enum,name)
+	local num = 0;
+	for i,v in pairs(children.KeyBinds[enum] or {}) do
+		num = num + 1;
+		if i == name then
+			table.remove(children.KeyBinds[enum],num)
+			return
+		end
+	end
+	return num;
+end
+children.Added = function (name)
+	local textbutton = Instance.new("TextButton", scaledgui)
+	textbutton.Position = UDim2.new(0 * (#children.All + 1), 0, 0.0665 * 2 * (#children.All + 1), 0)
+	textbutton.Name = name
+	textbutton.Text = name;
+	children.All[#children.All + 1] = true;
+	textbutton.Size = UDim2.new(0,150,0,100)
+	ui(textbutton)
+	textbutton.Visible = true;
+	textbutton.Font = Enum.Font.FredokaOne
+
+	local frame = textbutton:FindFirstChild("FrameValue")
+	if frame then
+		frame.Value.Visible = not frame.Value.Visible
+		return "..."
+	else
+		frame = Instance.new("Frame",scaledgui)
+	end
+	frame.Size = UDim2.new(0, 150, 0, 420)
+	frame.Visible = false;
+	frame.Name = name
+	local scrollframe = Instance.new("ScrollingFrame", frame)
+	scrollframe.Size = frame.Size + UDim2.new(-0.2, 0, -0.03, 0)
+	frame.Position = UDim2.new(0.2, 0, 0, 0)
+	scrollframe.Position = frame.Position + UDim2.new(-0.1, 0,0.014, 0)
+	scrollframe.BottomImage = ""
+	scrollframe.TopImage = ""
+	scrollframe.MidImage = ""
+	scrollframe.ScrollBarImageTransparency = 1
+	scrollframe.BackgroundTransparency = 1
+	dragGUI(frame,true)
+	local value = Instance.new("ObjectValue",textbutton)
+	value.Value = frame
+	value.Name = "FrameValue"
+	local layout = Instance.new("UIGridLayout",scrollframe)
+	layout.CellSize = UDim2.new(0,100,0,50)
+	children.Enabled[name] = {}
+	children.OpenFuncs[name] = function (open,pos)
+		local tble = {}
+		for i,v in pairs(string.split(tostring(pos["X"]),",")) do table.insert(tble,tonumber(v)) end
+		for i,v in pairs(string.split(tostring(pos["Y"]),",")) do table.insert(tble,tonumber(v)) end
+		children.Opened[name] = tble;
+		local frame = textbutton:FindFirstChild("FrameValue")
+		frame.Value.Position = pos
+		if frame then
+			children.IsOpened[name] = true;
+			frame.Value.Visible = open
+			return "..."
+		else
+			return "???"
+		end
+	end
+	textbutton.MouseButton1Click:Connect(function()
+		local frame = textbutton:FindFirstChild("FrameValue")
+		if frame then
+			frame.Value.Visible = not frame.Value.Visible
+			local pos = frame.Value.Position
+			local tble = {}
+			for i,v in pairs(string.split(tostring(pos["X"]),",")) do table.insert(tble,tonumber(v)) end
+			for i,v in pairs(string.split(tostring(pos["Y"]),",")) do table.insert(tble,tonumber(v)) end
+			if frame.Value.Visible then
+				children.Opened[name] = tble;
+				children.IsOpened[name] = true;
+			else
+				children.IsOpened[name] = nil;
+			end
+			return "..."
+		else
+			return "???"
+		end
+	end)
+	textbutton.TextScaled = true;
+	textbutton.RichText = true;
+	return {
+		AddButton = function (nameb,func)
+			local button = Instance.new("TextButton",scrollframe)
+			button.Text = nameb
+			button.Visible = true;
+			button.Name = nameb
+			local enabled = false
+			local setbackground = button.BackgroundColor3
+			local t = tick()
+			local function loadfunc(e)
+				enabled = not enabled
+				if e then enabled = e end
+				if tick() - t > 1 then
+					children.Notification(nameb.." has been "..(enabled and "Enabled" or "Disabled."),5)
+				end
+				if enabled then
+					children.Enabled[name][nameb] = true;
+					button.BackgroundColor3 = Color3.new(0.333333, 0, 1)
+				else
+					children.Enabled[name][nameb] = nil;
+					button.BackgroundColor3 = setbackground;
+				end
+				func(enabled)
+			end
+			button.MouseButton1Click:Connect(function()
+				loadfunc()
+			end)
+			children.LoadFuncs[nameb] = loadfunc
+			ui(button)
+			button.TextScaled = true;
+			button.RichText = true;
+			local keybind = Instance.new("TextBox",button)
+			keybind.Name = "KeyBind"
+			keybind.Position = UDim2.new(0.72,0,0,0)
+			keybind.Size = UDim2.new(0,28,0,29)
+			keybind.TextScaled = true;
+			keybind.RichText = true;
+			local newfunc
+			local a____
+			local alreadydoing = false
+			local _on = false;
+			task.wait()
+			keybind.Text = ""
+			children.Buttons[nameb] = keybind
+			newfunc = keybind.Changed:Connect(function()
+				local text = keybind.Text
+				if not pcall(function ()
+						return Enum.KeyCode[text]
+					end) or alreadydoing then return end
+				task.wait(0.025)
+				alreadydoing = true;
+				if text ~= "" then
+					if _on then
+						children.RemoveKeyBind(_on,nameb)
+					end
+					children.KeyBinds[Enum.KeyCode[text]] = (children.KeyBinds[Enum.KeyCode[text]] or {})
+					_on = Enum.KeyCode[text]
+					children.KeyBinds[Enum.KeyCode[text]][nameb] = function ()
+						loadfunc()
+					end
+					_on = Enum.KeyCode[text]
+				end
+				alreadydoing = false;
+			end)
+			local msentered = false
+			keybind.Font = Enum.Font.FredokaOne
+			local func
+			func = uis.InputBegan:Connect(function(i,g)
+				if not msentered then return end
+				task.wait(0.01)
+				local keycode = i.KeyCode
+				keybind.Text = (keycode.Name ~= "Unknown" and keycode.Name or keybind.Text)
+			end)
+			keybind.MouseEnter:Connect(function()
+				msentered = true;
+			end)
+			keybind.MouseLeave:Connect(function()
+				msentered = false;
+			end)
+			return loadfunc
+		end
+	}
+end
+children.SaveData = function()
+	writefile("DNut Private/"..game.."/data.lua",game.HttpService:JSONEncode(children.Enabled))
+	writefile("DNut Private/"..game."/data2.lua",game.HttpService:JSONEncode(children.Opened))
+	writefile("DNut Private/"..game.."/data3.lua",game.HttpService:JSONEncode(children.IsOpened))
+	local data4 = {}
+	for a,keybind in pairs(children.KeyBinds) do
+		for i,v in pairs(keybind) do
+			data4[i] = a.Name
+		end
+	end
+	writefile("DNut Private/"..game.."/data4.lua",game.HttpService:JSONEncode(data4))
+end
+local alreadymade = 0
+local msg = Instance.new("ScreenGui")
+msg.Name = randomString()
+msg.DisplayOrder = 999
+msg.ZIndexBehavior = Enum.ZIndexBehavior.Global
+msg.OnTopOfCoreBlur = true
+if gethui and (not KRNL_LOADED) then
+	msg.Parent = gethui()
+elseif not is_sirhurt_closure and syn and syn.protect_gui then
+	syn.protect_gui(msg)
+	msg.Parent = game:GetService("CoreGui")
+else
+	msg.Parent = game:GetService("CoreGui")
+end
+msg.Enabled = true;
+local ui = msg
+children.Notification = function (notification,time)
+	local frame = Instance.new("TextLabel",ui)
+	frame.Position = UDim2.new(1, -200,1 - (0.065 * alreadymade), -50)
+	frame.TextScaled = true;
+	frame.Font = Enum.Font.FredokaOne
+	Instance.new("UICorner",frame)
+	frame.Size = UDim2.new(0, 200,0, 50)
+	frame.Text = notification
+	alreadymade += 1
+	frame.Visible = true
+	task.delay(time,function ()
+		frame:destroy()
+		alreadymade -= 1
+	end)
+end
+return children
