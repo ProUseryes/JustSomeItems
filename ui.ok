@@ -393,7 +393,7 @@ children.RealLoadData = function ()
 		end
 	end
 end
-uis.InputBegan:Connect(function(input,gameprocess)
+game.UserInputService.InputBegan:Connect(function(input,gameprocess)
 	if gameprocess then return end
 	if game:GetService("UserInputService"):GetFocusedTextBox() == nil then
 		if input.KeyCode == Enum.KeyCode.P then
